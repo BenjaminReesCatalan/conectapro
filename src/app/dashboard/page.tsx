@@ -1,53 +1,55 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import {
-  Calendar,
-  Clock,
-  FileText,
-  TrendingUp,
-  Users,
-  ArrowRight,
-} from "lucide-react";
+import { Calendar, Clock, FileText, TrendingUp, ArrowRight } from "lucide-react";
 import { mockStats, upcomingSessions, pendingBoletas, recentActivity } from "@/data/mock";
 
-const statIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  calendar: Calendar,
-  clock: Clock,
-  "trending-up": TrendingUp,
-  "file-text": FileText,
-  users: Users,
-};
+const statIcons: React.ComponentType<{ className?: string }>[] = [Calendar, Clock, TrendingUp, FileText];
 
 export default function DashboardPage() {
   return (
     <DashboardLayout title="Dashboard">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {mockStats.map((stat, idx) => {
-          const IconList = [Calendar, Clock, TrendingUp, FileText];
-          const Icon = IconList[idx % IconList.length];
+          const Icon = statIcons[idx % statIcons.length];
+          const isClickable = idx === 0 || idx === 3;
           return (
-            <Card key={stat.label}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-text-muted">{stat.label}</CardTitle>
-                <Icon className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-text">{stat.value}</div>
-                <CardDescription className="mt-1">{stat.subtitle}</CardDescription>
-              </CardContent>
-              <CardFooter>
-                <div className={`flex items-center gap-1 text-xs ${stat.color}`}>
-                  {stat.color.includes("success") ? (
-                    <span className="flex items-center gap-1">▲</span>
-                  ) : stat.color.includes("warning") ? (
-                    <span className="flex items-center gap-1">○</span>
-                  ) : null}
-                  <span>{stat.color.includes("success") ? "+12%" : stat.color.includes("warning") ? "2 pendientes" : ""}</span>
-                </div>
-              </CardFooter>
+            <Card
+              key={stat.label}
+              className={`cursor-pointer hover:shadow-md transition-shadow ${isClickable ? "border-primary/20" : ""}`}
+              onClick={() => {
+                if (stat.label === "Sesiones hoy") {
+                  // navigate handled via link wrapper below
+                }
+              }}
+            >
+              <Link
+                href={stat.label === "Sesiones hoy" ? "/agenda" : stat.label === "Boletas pendientes" ? "/boletas" : "#"}
+                className="block h-full"
+              >
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-text-muted">{stat.label}</CardTitle>
+                  <Icon className="h-4 w-4" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-text">{stat.value}</div>
+                  <CardDescription className="mt-1">{stat.subtitle}</CardDescription>
+                </CardContent>
+                <CardFooter>
+                  <div className={`flex items-center gap-1 text-xs ${stat.color}`}>
+                    {stat.color.includes("success") ? (
+                      <span className="flex items-center gap-1">▲</span>
+                    ) : stat.color.includes("warning") ? (
+                      <span className="flex items-center gap-1">○</span>
+                    ) : null}
+                    <span>{stat.color.includes("success") ? "+12%" : stat.color.includes("warning") ? "2 pendientes" : ""}</span>
+                  </div>
+                </CardFooter>
+              </Link>
             </Card>
           );
         })}
@@ -65,37 +67,36 @@ export default function DashboardPage() {
             <CardContent className="pb-0">
               <div className="space-y-3">
                 {upcomingSessions.map((session) => (
-                  <div
+                  <Link
                     key={session.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-secondary transition-colors cursor-pointer"
+                    href="/agenda"
+                    className="block"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                        <Clock className="w-5 h-5" />
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-secondary transition-colors cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                          <Clock className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-text">{session.patient}</p>
+                          <p className="text-xs text-text-muted">
+                            {session.time} • {session.type} • {session.duration}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-text">{session.patient}</p>
-                        <p className="text-xs text-text-muted">
-                          {session.time} • {session.type} • {session.duration}
-                        </p>
-                      </div>
+                      <Badge
+                        variant={
+                          session.status === "confirmada"
+                            ? "success"
+                            : session.status === "pendiente"
+                            ? "warning"
+                            : "error"
+                        }
+                      >
+                        {session.status === "confirmada" ? "Confirmada" : session.status === "pendiente" ? "Pendiente" : "Cancelada"}
+                      </Badge>
                     </div>
-                    <Badge
-                      variant={
-                        session.status === "confirmada"
-                          ? "success"
-                          : session.status === "pendiente"
-                          ? "warning"
-                          : "error"
-                      }
-                    >
-                      {session.status === "confirmada"
-                        ? "Confirmada"
-                        : session.status === "pendiente"
-                        ? "Pendiente"
-                        : "Cancelada"}
-                    </Badge>
-                  </div>
+                  </Link>
                 ))}
               </div>
               <div className="mt-4 pt-4 border-t border-border">
@@ -118,23 +119,26 @@ export default function DashboardPage() {
             <CardContent className="pb-0">
               <div className="space-y-3">
                 {pendingBoletas.map((boleta) => (
-                  <div
+                  <Link
                     key={boleta.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border"
+                    href="/boletas"
+                    className="block"
                   >
-                    <div>
-                      <p className="text-sm font-medium text-text">{boleta.patient}</p>
-                      <p className="text-xs text-text-muted">{boleta.description}</p>
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-secondary transition-colors cursor-pointer">
+                      <div>
+                        <p className="text-sm font-medium text-text">{boleta.patient}</p>
+                        <p className="text-xs text-text-muted">{boleta.description}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-text">
+                          ${boleta.amount.toLocaleString("es-CL")}
+                        </p>
+                        <Badge variant="warning" className="mt-1 text-[10px]">
+                          Pendiente
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-text">
-                        ${boleta.amount.toLocaleString("es-CL")}
-                      </p>
-                      <Badge variant="warning" className="mt-1 text-[10px]">
-                        Pendiente
-                      </Badge>
-                    </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
               <div className="mt-4 pt-4 border-t border-border">
@@ -153,10 +157,7 @@ export default function DashboardPage() {
               <CardContent className="pb-0">
                 <div className="space-y-3">
                   {recentActivity.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="flex items-start gap-3 p-2"
-                    >
+                    <div key={activity.id} className="flex items-start gap-3 p-2 cursor-pointer hover:bg-secondary rounded-lg transition-colors">
                       <div className="w-6 h-6 rounded-full bg-secondary flex-shrink-0 flex items-center justify-center">
                         <span className="text-[10px] font-bold text-text-muted">
                           {activity.type[0].toUpperCase()}
